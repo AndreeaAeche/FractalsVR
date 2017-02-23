@@ -1,0 +1,295 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Cardboard Example</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+      body {
+        margin: 0px;
+        overflow: hidden;
+      }
+      #example {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="example"></div>
+
+  <script src="three.js"></script>
+  <script src="StereoEffect.js"></script>
+  <script src="DeviceOrientationControls.js"></script>
+  <script src="OrbitControls.js"></script>
+  <script src="script.js"></script>
+
+  <script>
+    var camera, scene, renderer;
+    var effect, controls;
+    var element, container;
+
+    var clock = new THREE.Clock();
+
+    init();
+    animate();
+
+    function init() {
+      renderer = new THREE.WebGLRenderer();
+      element = renderer.domElement;
+      container = document.getElementById('example');
+      container.appendChild(element);
+
+      effect = new THREE.StereoEffect(renderer);
+
+      scene = new THREE.Scene();
+
+      camera = new THREE.PerspectiveCamera(90, 1, 0.001, 700);
+      camera.position.set(0, 10, 0);
+      scene.add(camera);
+
+      controls = new THREE.OrbitControls(camera, element);
+      //controls.rotateUp(Math.PI / 4);
+      controls.target.set(
+        camera.position.x + 0.1,
+        camera.position.y,
+        camera.position.z
+      );
+      controls.noZoom = true;
+      controls.noPan = true;
+
+      function setOrientationControls(e) {
+        if (!e.alpha) {
+          return;
+        }
+
+        controls = new THREE.DeviceOrientationControls(camera, true);
+        controls.connect();
+        controls.update();
+
+        element.addEventListener('click', fullscreen, false);
+
+        window.removeEventListener('deviceorientation', setOrientationControls, true);
+      }
+      window.addEventListener('deviceorientation', setOrientationControls, true);
+
+
+      var light = new THREE.HemisphereLight(0x777777, 0x000000, 0.6);
+      scene.add(light);
+
+      var texture = THREE.ImageUtils.loadTexture(
+        'galaxy.png'
+      );
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat = new THREE.Vector2(50, 50);
+      texture.anisotropy = renderer.getMaxAnisotropy();
+
+      var material = new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+        specular: 0xffffff,
+        shininess: 20,
+        shading: THREE.FlatShading,
+        map: texture
+      });
+
+      var geometry = new THREE.PlaneGeometry(1000, 1000);
+
+      var mesh = new THREE.Mesh(geometry, material);
+      mesh.rotation.x = -Math.PI / 2;
+      scene.add(mesh);
+
+      window.addEventListener('resize', resize, false);
+      setTimeout(resize, 1);
+    }
+
+    function resize() {
+      var width = container.offsetWidth;
+      var height = container.offsetHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(width, height);
+      effect.setSize(width, height);
+    }
+
+    function update(dt) {
+      resize();
+
+      camera.updateProjectionMatrix();
+
+      controls.update(dt);
+    }
+
+    function render(dt) {
+      effect.render(scene, camera);
+    }
+
+    function animate(t) {
+      requestAnimationFrame(animate);
+
+      update(clock.getDelta());
+      render(clock.getDelta());
+    }
+
+    function fullscreen() {
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if (container.msRequestFullscreen) {
+        container.msRequestFullscreen();
+      } else if (container.mozRequestFullScreen) {
+        container.mozRequestFullScreen();
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      }
+    }
+  </script>
+  </body>
+</html> -->
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta property="description" content="An interactive flight through attractor orbits generated using Barry Martin's Hopalong formula."/>
+
+        <meta property="og:title" content="Barry Martin's Hopalong Orbits Visualizer - WebGL Experiment"/>
+        <meta property="og:image" img src="pic_mountain.jpg"/>
+        <meta property="og:description" content="An interactive flight through attractor orbits generated using Barry Martin's Hopalong formula."/>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            body {
+                background-color: #000000;
+                margin: 0px;
+                overflow: hidden;
+                font-family:Monospace;
+                font-size:13px;
+                text-align:center;
+                font-weight: bold;
+                text-align:center;
+            }
+            a {
+                color:#ffffaa;
+            }
+            #info {
+                color: #fff;
+                position: absolute;
+                top: 0px; width: 100%;
+                padding: 5px;
+                z-index: 100;
+            }
+            #plusone {
+                position: absolute;
+                bottom: 5px;
+                left: 10px;
+                z-index: 100;
+            }
+            #tweet {
+                position: absolute;
+                bottom: 7px;
+                left: 100px;
+                z-index: 100;
+            }
+            #fb {
+                position: absolute;
+                bottom: 11px;
+                left: 210px;
+                z-index: 100;
+            }
+
+            #chaosnebula {
+                position: absolute;
+                padding: 5px;
+                bottom: 0px;
+                right: 5px;
+                z-index: 100;
+                color:#fff;
+            }
+
+            #about {
+                    text-align:left;
+                    z-index:110;
+                    position:absolute;
+                    top: 25px;
+                    left: 5px;
+                    display:none;
+                    width: 400px;
+                    color:#fff; background: #121212; opacity:0.8; border-radius:20px; padding: 16px
+            }
+            #aboutlink {
+                z-index:110;
+                    position:absolute;
+                    top: 5px;
+                    left: 5px;
+            }
+        </style>
+
+        <script type="text/javascript">
+          function recordOutboundLink(link, category, action) {
+            _gat._getTrackerByName()._trackEvent(category, action);
+            setTimeout('document.location = "' + link.href + '"', 100);
+          }
+        </script>
+    </head>
+    <body>
+
+
+
+    <script src="three.js"></script>
+    <script src="StereoEffect.js"></script>
+    <script src="DeviceOrientationControls.js"></script>
+    <script src="stats.js"></script>
+    <script src="detector.js"></script>
+    <script src="requestAnimationFrame.js"></script>
+
+    <script src="OrbitControls.js"></script>
+
+    <script src="audio.js"></script>
+    <script src="script.js"></script>
+
+    <div id="fb-root"></div>
+    <!-- <script>(function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) {return;}
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));</script> -->
+
+        <!-- <div id="aboutlink">
+        <a href="javascript:showHideAbout()">About</a> -->
+    </div>
+    <!-- <div id="about">
+            <b>Barry Martin's Hopalong Orbits Visualizer</b>
+            <p>These orbits are generated iterating this simple algorithm:</p>
+
+            <p>(x, y) -> (y - sign(x)*sqrt(abs(b*x - c)), a -x )</p>
+
+            <p>where a, b, c are random parameters. This is known as the 'Hopalong Attractor'.</p>
+            <p>3D rendering is done using WebGL and <a href="http://github.com/mrdoob/three.js" target="_blank">three.js</a></p>
+            <hr>
+              </div> -->
+
+    <!-- <div id="plusone">
+    <g:plusone></g:plusone>
+    </div>
+    <div id="tweet">
+    <a href="http://twitter.com/share" class="twitter-share-button" data-count="horizontal">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+    </div>
+    <div id="fb">
+        <div style="position:relative; top:0px;" class="fb-like" data-href="http://iacopoapps.appspot.com/hopalongwebgl/" data-send="false" data-layout="button_count" data-width="450" data-show-faces="true" data-colorscheme="dark"></div>
+    </div>
+    <script type="text/javascript">
+      (function() {
+        var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+        po.src = 'https://apis.google.com/js/plusone.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+      })();
+    </script> -->
+
+    </body>
+</html>
