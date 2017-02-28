@@ -3,23 +3,27 @@
    */
 
     //if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+    var PARTICLES;
+    //var timer = document.getElementById('raid').currentTime;
+    //var amplitude = Math.floor( timer * 30 - 1 );
 
     var VISUALS_VISIBLE = true;
+    var PARAMS = 4;
 
-    var SCALE_FACTOR = 1500;
+    var SCALE_FACTOR = 1000;
     var CAMERA_BOUND = 200;
 
-    var NUM_POINTS_SUBSET = 5000;
-    var NUM_SUBSETS       = 7;
+    var NUM_POINTS_SUBSET = 10000;
+    var NUM_SUBSETS       = 2;
     var NUM_POINTS = NUM_POINTS_SUBSET * NUM_SUBSETS;
 
     var NUM_LEVELS = 5;
-    var LEVEL_DEPTH = 550;
+    var LEVEL_DEPTH = 500;
 
     var DEF_BRIGHTNESS = 1;
     var DEF_SATURATION = 0.8;
 
-    var SPRITE_SIZE = Math.ceil(3 * window.innerWidth /1600);
+    var SPRITE_SIZE = Math.ceil(2 * window.innerWidth /1600);
 
     // Orbit parameters constraints
     var A_MIN = -30;
@@ -34,6 +38,7 @@
     var E_MAX = 12;
 
     // Orbit parameters
+
     var a, b, c, d, e;
 
     // Orbit data
@@ -69,7 +74,7 @@
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
 
-    var speed = 6;
+    var speed = 1;
     var rotationSpeed = 0.005;
 
     init();
@@ -85,10 +90,11 @@
         document.body.appendChild( container );
 
         camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 3 * SCALE_FACTOR );
-        camera.position.z = SCALE_FACTOR/2;
+        camera.position.z = SCALE_FACTOR / 2;
+        //camera.position.x = SCALE_FACTOR / 4;
 
         scene = new THREE.Scene();
-        //scene.fog = new THREE.Fog( Math.random(), 2000, 4500);
+        //scene.fog = new THREE.Fog( 0x071E30, 500, 1000);
 
         generateOrbit();
 
@@ -103,23 +109,24 @@
                   map: sprite1, blending: THREE.AdditiveBlending,
                   depthTest: false, transparent : true } );
                   //THREE.PointsMaterial
-                materials.color.setHSL(Math.random(), Math.random(), Math.random());
-                var particles = new THREE.Points( geometry, materials );
-                particles.myMaterial = materials;
-                particles.myLevel = k;
-                particles.mySubset = s;
-                particles.position.x = 0;
-                particles.position.y = 0;
-                particles.position.z = - LEVEL_DEPTH * k - (s  * LEVEL_DEPTH / NUM_SUBSETS) + SCALE_FACTOR/2;
-                particles.needsUpdate = 0;
-                scene.add( particles );
+                //materials.color.setHSL(Math.random(), Math.random(), Math.random());
+                PARTICLES = new THREE.Points( geometry, materials );
+                PARTICLES.myMaterial = materials;
+                PARTICLES.myLevel = k;
+                PARTICLES.mySubset = s;
+                PARTICLES.position.x = 0;
+                PARTICLES.position.y = 0;
+                PARTICLES.position.z = - LEVEL_DEPTH * k - (s  * LEVEL_DEPTH / NUM_SUBSETS) + SCALE_FACTOR/2;
+                PARTICLES.needsUpdate = 0;
+                scene.add( PARTICLES );
             }
         }
 
         // Setup renderer and effects
-        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer = new THREE.WebGLRenderer( { clearColor: 0x000000, clearAlpha: 0, antialias: false } );
         //renderer.setClearColor( fogColor, 1 );
         renderer.setSize( window.innerWidth, window.innerHeight );
+
 
         container.appendChild( renderer.domElement );
 
@@ -138,7 +145,7 @@
         window.addEventListener( 'resize', onWindowResize, false );*/
 
         // Schedule orbit regeneration
-        setInterval(updateOrbit, 5000);
+        //setInterval(updateOrbit, 5000);
 
     //--------------------------------------------------------------------
         effect = new THREE.StereoEffect(renderer);
@@ -215,29 +222,38 @@
         // }
 
         camera.lookAt( scene.position );
+        timer = source.context.currentTime;
+        amplitude = Math.floor( timer * 60 - 1 );
+        //console.log(data[amplitude] * .1)
+
             for( i = 0; i < scene.children.length; i++ ) {
               //var z = Math.abs(scene.children[i].position.z / 1600);
-                scene.children[i].position.z += speed;
-                scene.children[i].rotation.z += rotationSpeed;
-                //scene.children[i].material.color.setHSL( Math.random(), Math.random(), Math.random());
-                var col = freqByteData[3] / 255;
 
-                // scene.children[i].material.color.setRGB(
-                //   0,
-                //   0.5 - col * z,
-                //   0);
-                //scene.children[i].scale.setScalar(col + 1.7);
+                //scene.children[i].position.z += speed;
+                scene.children[i].rotation.z += rotationSpeed;
+
+                scene.children[i].scale.y = data[amplitude] * .1;
+                scene.children[i].scale.x = data[amplitude] * .1;
+                var n = (data[amplitude] * .005) + 0.5;
+                //console.log(n)
+                scene.children[i].scale.x = scene.children[i].scale.y = scene.children[i].scale.y = Math.abs(n + Number.EPSILON);
+                scene.children[i].material.color.setRGB( n, n, n);
+                scene.children[i].position.z += n;
+                generateOrbit();
+
+                //scene.children[i].geometry.verticesNeedUpdate = true;
+                //scene.children[i].myMaterial.color.setHSL( Math.random(), Math.random(), Math.random());
+                //var col = freqByteData[PARAMS] / 256;
+                //scene.children[i].material.color.setRGB( 0, n, 0);
+
+                //scene.children[i].scale.setScalar(col + 0.9);
 
             if (scene.children[i].position.z > camera.position.z){
+                generateOrbit();
                 scene.children[i].geometry.verticesNeedUpdate = true;
                 //scene.children[i].material.color.setRGB( Math.random(), Math.random(), Math.random());
-
+                //scene.children[i].myMaterial.color.setHSL( Math.random(), Math.random(), Math.random());
                 scene.children[i].position.z = - (NUM_LEVELS -1) * LEVEL_DEPTH;
-                if (scene.children[i].geometry.verticesNeedUpdate = true){
-                    scene.children[i].geometry.__dirtyVertices = true;
-                    //scene.children[i].myMaterial.color.setHSL( Math.random(), Math.random(), Math.random());
-                    scene.children[i].needsUpdate = 0;
-                }
             }
         }
 
@@ -248,8 +264,12 @@
     }
 
     function animate(time) {
-      analyser.getByteFrequencyData(freqByteData);
-		    analyser.getByteTimeDomainData(timeByteData);
+
+         analyser.getByteFrequencyData(freqByteData);
+		     analyser.getByteTimeDomainData(timeByteData);
+        for(var j = 0; j < LEVEL_DEPTH; j++) {
+			       PARTICLES[0] = timeByteData[j]*2;//stretch by 2
+		         }
         requestAnimationFrame( animate );
         render(time);
         stats.update();
@@ -291,8 +311,12 @@
         for (var s = 0; s < NUM_SUBSETS; s++){
 
             // Use a different starting point for each orbit subset
-            x = s * .005 * (0.5-Math.random());
-            y = s * .005 * (0.5-Math.random());
+
+            //x = s * .005 * (0.5-Math.random());
+            //y = s * .005 * (0.5-Math.random());
+
+             x = 0;
+             y = 0;
 
             var curSubset = subsets[s];
 
@@ -318,7 +342,7 @@
             }
         }
 
-        var scaleX = 2 * scale_factor_l / (xMax - xMin);
+        var scaleX = 2 *scale_factor_l / (xMax - xMin);
         var scaleY = 2 * scale_factor_l / (yMax - yMin);
 
         orbit.xMin = xMin;
@@ -347,11 +371,30 @@
     }
 
     function shuffleParams() {
+      //PARAMS++;
+      //default
+
         a = A_MIN + Math.random() * (A_MAX - A_MIN);
         b = B_MIN + Math.random() * (B_MAX - B_MIN);
         c = C_MIN + Math.random() * (C_MAX - C_MIN);
         d = D_MIN + Math.random() * (D_MAX - D_MIN);
         e = E_MIN + Math.random() * (E_MAX - E_MIN);
+
+        //manual
+        /*
+        a = A_MIN + (freqByteData[PARAMS] / 255) * (A_MAX - A_MIN);
+        b = B_MIN + (freqByteData[PARAMS] / 255) * (B_MAX - B_MIN);
+        c = C_MIN + (freqByteData[PARAMS] / 255) * (C_MAX - C_MIN);
+        d = D_MIN + (freqByteData[PARAMS] / 255) * (D_MAX - D_MIN);
+        e = E_MIN + (freqByteData[PARAMS] / 255) * (E_MAX - E_MIN);
+        */
+        //auto
+        // a = A_MIN + ((freqByteData[0] / 255) * (A_MAX - A_MIN)) / 1000;
+        // b = B_MIN + ((freqByteData[6] / 255) * (B_MAX - B_MIN)) / 1000;
+        // c = C_MIN + ((freqByteData[12] / 255) * (C_MAX - C_MIN)) / 1000;
+        // d = D_MIN + ((freqByteData[18] / 255) * (D_MAX - D_MIN)) / 1000;
+        // e = E_MIN + ((freqByteData[24] / 255) * (E_MAX - E_MIN)) / 1000;
+
     }
 
     ///////////////////////////////////////////////

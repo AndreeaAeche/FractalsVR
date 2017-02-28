@@ -6,14 +6,14 @@ function loadAudio(){
   freqByteData = new Uint8Array(analyser.frequencyBinCount);
   timeByteData = new Uint8Array(analyser.frequencyBinCount);
 
-  analyser.smoothingTimeConstant = 0.1;
+  analyser.smoothingTimeConstant = 0.01;
   analyser.fftSize = 32;
 
   	// Connect audio processing graph
   source.connect(analyser);
   analyser.connect(audioContext.destination);
 
-  loadAudioBuffer("sound/trance.mp3");
+  loadAudioBuffer("sound/raid.wav");
 }
 
 function loadAudioBuffer(url) {
